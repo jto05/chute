@@ -37,7 +37,7 @@ func run(log *logger.Logger) error {
 		EndDate        string
 	}{
 		ScrapeInterval: 6 * time.Hour,
-		DataDir:        "data/results",
+		DataDir:        "data/results/rodeo",
 		StartDate:      "1/1/2026",
 		EndDate:        "12/31/2026",
 	}
