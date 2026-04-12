@@ -1,4 +1,4 @@
-// scraper is a long-running service that periodically fetches rodeo results
+// ferdinand is a long-running service that periodically fetches rodeo results
 // from prorodeo.com and persists them to the data store.
 package main
 
@@ -48,7 +48,7 @@ func run(log *logger.Logger) error {
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
-	log.Info("scraper running", "interval", cfg.ScrapeInterval)
+	log.Info("ferdinand running", "interval", cfg.ScrapeInterval)
 
 	// Run immediately on startup, then on the ticker.
 	if err := app.Sync(ctx, cfg.StartDate, cfg.EndDate); err != nil {

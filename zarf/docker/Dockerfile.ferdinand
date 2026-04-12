@@ -5,10 +5,10 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-RUN CGO_ENABLED=0 go build -ldflags="-X main.build=${BUILD_REF}" -o /bin/scraper ./api/services/scraper/...
+RUN CGO_ENABLED=0 go build -ldflags="-X main.build=${BUILD_REF}" -o /bin/ferdinand ./api/services/ferdinand/...
 
 # =====================================================================================================================
 
 FROM gcr.io/distroless/static-debian12
-COPY --from=build /bin/scraper /bin/scraper
-CMD ["/bin/scraper"]
+COPY --from=build /bin/ferdinand /bin/ferdinand
+CMD ["/bin/ferdinand"]

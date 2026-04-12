@@ -1,11 +1,11 @@
-SCRAPER_IMAGE  := chute-scraper
+FERDINAND_IMAGE  := chute-ferdinand
 SHEET_IMAGE     := chute-sheet
 
 # ===================================================================================================================
 # Development
 
-run-scraper:
-	go run ./api/services/scraper/...
+run-ferdinand:
+	go run ./api/services/ferdinand/...
 
 run-sheet:
 	go run ./api/services/sheet/...
@@ -22,8 +22,8 @@ test:
 # ===================================================================================================================
 # Build
 
-build-scraper:
-	go build -o ./bin/scraper ./api/services/scraper/...
+build-ferdinand:
+	go build -o ./bin/ferdinand ./api/services/ferdinand/...
 
 build-sheet:
 	go build -o ./bin/sheet ./api/services/sheet/...
@@ -31,8 +31,8 @@ build-sheet:
 # ===================================================================================================================
 # Docker
 
-docker-scraper:
-	docker build -f zarf/docker/Dockerfile.scraper -t $(SCRAPER_IMAGE) .
+docker-ferdinand:
+	docker build -f zarf/docker/Dockerfile.ferdinand -t $(FERDINAND_IMAGE) .
 
 docker-sheet:
 	docker build -f zarf/docker/Dockerfile.sheet -t $(SHEET_IMAGE) .
