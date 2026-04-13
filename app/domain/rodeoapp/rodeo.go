@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/am29/ferdinand/app/domain/prorodeoapp"
 	"github.com/jto05/chute/business/data/store/rodeodb"
@@ -28,7 +29,7 @@ func (a *App) SyncAthletes(ctx context.Context) error {
 	a.log.Info("sync athletes started")
 
 	// shared pool of ids
-	ids := make(chan int, 750) // at size 750 because workers consume as soon as fetched ids collected
+	ids := make(chan int, 5000) // at size 750 because workers consume as soon as fetched ids collected
 
 	// Part 1: collect all contestantIDs
 	var collectWg sync.WaitGroup // semaphore
@@ -66,9 +67,19 @@ func (a *App) SyncAthletes(ctx context.Context) error {
 		close(ids)
 	}()
 
+	/*
+
+		schema:
+
+		-
+		- blob biograph text (characters)
+
+
+	*/
+
 	// part 2: fetch athlete based on id from shared channel and store
 	var fetchWg sync.WaitGroup
-	numOfConsumers := 10
+	numOfConsumers := 30
 
 	for range numOfConsumers {
 		fetchWg.Add(1) // post
@@ -81,22 +92,25 @@ func (a *App) SyncAthletes(ctx context.Context) error {
 					continue // for now skip existing athletes
 				}
 
-				// get athlete data
 				raw, err := prorodeoapp.FetchAthlete(ctx, id)
 				if err != nil {
 					a.log.Error("fetch athlete", "id", id, "error", err)
+					continue
 				}
 
-				// parse athlete data
 				athlete, err := prorodeoapp.ParseAthlete(raw)
 				if err != nil {
 					a.log.Error("parse athlete", "id", id, "error", err)
+					continue
 				}
 
-				// store athlete
-				a.store.SaveAthlete(athlete)
+				if err := a.store.SaveAthlete(athlete); err != nil {
+					a.log.Error("save athlete", "id", id, "error", err)
+				}
 
 			}
+
+			time.Sleep(50 * time.Millisecond)
 		}()
 	}
 

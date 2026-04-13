@@ -50,8 +50,12 @@ func run(log *logger.Logger) error {
 
 	log.Info("ferdinand running", "interval", cfg.ScrapeInterval)
 
-	// Run immediately on startup, then on the ticker.
-	if err := app.Sync(ctx, cfg.StartDate, cfg.EndDate); err != nil {
+	// // Run immediately on startup, then on the ticker.
+	// if err := app.Sync(ctx, cfg.StartDate, cfg.EndDate); err != nil {
+	// 	log.Error("sync", "error", err)
+	// }
+
+	if err := app.SyncAthletes(ctx); err != nil {
 		log.Error("sync", "error", err)
 	}
 
@@ -61,7 +65,10 @@ func run(log *logger.Logger) error {
 	for {
 		select {
 		case <-ticker.C:
-			if err := app.Sync(ctx, cfg.StartDate, cfg.EndDate); err != nil {
+			// if err := app.Sync(ctx, cfg.StartDate, cfg.EndDate); err != nil {
+			// 	log.Error("sync", "error", err)
+			// }
+			if err := app.SyncAthletes(ctx); err != nil {
 				log.Error("sync", "error", err)
 			}
 		case <-ctx.Done():
