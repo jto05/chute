@@ -190,3 +190,71 @@ func (s *Store) SaveAthleteBatch(ctx context.Context, batch []prorodeoapp.Athlet
 	// commit transaction to database
 	return tx.Commit()
 }
+
+// ==================================
+// Search
+
+// AthleteResult is a lightweight view of a contestant used for search results.
+type AthleteResult struct {
+	ContestantID  int
+	FirstName     string
+	LastName      string
+	Hometown      string
+	EventTypes    string
+	TotalEarnings float64
+	YearEarnings  float64
+}
+
+// SearchAthletes returns contestants matching all words in the query against the
+// full name (first + last). Searching "stetson wright" requires both tokens to
+// appear somewhere in the full name, so multi-word searches work correctly.
+func (s *Store) SearchAthletes(ctx context.Context, q string) ([]AthleteResult, error) {
+	tokens := strings.Fields(q)
+	if len(tokens) == 0 {
+		return nil, nil
+	}
+
+	// Build: WHERE (first_name||' '||last_name) LIKE ? [AND ...] for each token.
+	clauses := make([]string, len(tokens))
+	args := make([]any, len(tokens))
+	for i, t := range tokens {
+		clauses[i] = "(first_name || ' ' || last_name) LIKE ?"
+		args[i] = "%" + t + "%"
+	}
+
+	query := `
+		SELECT id, first_name, last_name, hometown, event_types, total_earnings, year_earnings
+		FROM contestants
+		WHERE ` + strings.Join(clauses, " AND ") + `
+		ORDER BY last_name, first_name
+		LIMIT 50`
+
+	rows, err := s.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("search athletes: %w", err)
+	}
+	defer rows.Close()
+
+	var results []AthleteResult
+	for rows.Next() {
+		var r AthleteResult
+		if err := rows.Scan(&r.ContestantID, &r.FirstName, &r.LastName, &r.Hometown, &r.EventTypes, &r.TotalEarnings, &r.YearEarnings); err != nil {
+			return nil, fmt.Errorf("scan athlete: %w", err)
+		}
+		results = append(results, r)
+	}
+	return results, rows.Err()
+}
+
+// LoadAthlete returns the full row for a single contestant by ID.
+func (s *Store) LoadAthlete(ctx context.Context, id int) (AthleteResult, error) {
+	var r AthleteResult
+	err := s.db.QueryRowContext(ctx, `
+		SELECT id, first_name, last_name, hometown, event_types, total_earnings, year_earnings
+		FROM contestants WHERE id = ?`, id,
+	).Scan(&r.ContestantID, &r.FirstName, &r.LastName, &r.Hometown, &r.EventTypes, &r.TotalEarnings, &r.YearEarnings)
+	if err != nil {
+		return AthleteResult{}, fmt.Errorf("load athlete %d: %w", id, err)
+	}
+	return r, nil
+}
