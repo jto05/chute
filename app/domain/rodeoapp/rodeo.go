@@ -61,27 +61,23 @@ func (a *App) SyncAthletes(ctx context.Context) error {
 		}(string(letter))
 	}
 
-	// close ids channel when all letters are done fetching
+	// close ids channel when all letters are done collecting
 	go func() {
 		collectWg.Wait()
 		close(ids)
 	}()
 
-	// part 2: fetch athlete based on id from shared channel and store
+	// part 2: fetch athlete based on id from shared channel and store in athletes batch channel
 	var fetchWg sync.WaitGroup
-	const numOfConsumers = 30
+	const numOfFetchWorkers = 30
+	athletes := make(chan prorodeoapp.Athlete, 100) // batch of athletes
 
-	for range numOfConsumers {
+	for range numOfFetchWorkers {
 		fetchWg.Add(1) // post
 
 		go func() {
 			defer fetchWg.Done() // wait
 			for id := range ids {
-				// NOTE: should already stored athletes be skipped? should implement way to update exisitng athletes?
-				// if a.store.AthleteExists(id) {
-				// 	continue // for now skip existing athletes
-				// }
-
 				raw, err := prorodeoapp.FetchAthlete(ctx, id)
 				if err != nil {
 					a.log.Error("fetch athlete", "id", id, "error", err)
@@ -94,15 +90,42 @@ func (a *App) SyncAthletes(ctx context.Context) error {
 					continue
 				}
 
-				if err := a.store.SaveAthlete(ctx, athlete); err != nil {
-					a.log.Error("save athlete", "id", id, "error", err)
-				}
+				athletes <- athlete
 			}
-
-			// // latency for rate limiting
-			// time.Sleep(50 * time.Millisecond)
 		}()
 	}
+
+	// close athletes channel when finished
+	go func() {
+		fetchWg.Wait()
+		close(athletes)
+	}()
+
+	// part 3: save athletes in batches
+	var writerWg sync.WaitGroup
+	const batchLimit = 100
+
+	writerWg.Add(1)
+	go func() { // single worker model
+		defer writerWg.Done()
+		batch := make([]prorodeoapp.Athlete, 0, batchLimit)
+
+		for athlete := range athletes {
+			batch = append(batch, athlete)
+			if len(batch) >= batchLimit {
+				if err := a.store.SaveAthleteBatch(ctx, batch); err != nil {
+					a.log.Error("save batch", "error", err)
+				}
+				batch = batch[:0]
+			}
+		}
+		// flush remaining
+		if len(batch) > 0 {
+			if err := a.store.SaveAthleteBatch(ctx, batch); err != nil {
+				a.log.Error("save final batch", "error", err)
+			}
+		}
+	}()
 
 	fetchWg.Wait()
 	a.log.Info("syncing athletes completed")
