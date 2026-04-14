@@ -59,6 +59,7 @@ func createTables(db *sql.DB) error {
       event_types        TEXT,
       biography_text     TEXT,
       is_active          INTEGER  NOT NULL DEFAULT 1,
+      notes              TEXT     NOT NULL DEFAULT '',
       scraped_at         DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
   );
   `
@@ -72,12 +73,29 @@ func createTables(db *sql.DB) error {
 // SaveAthlete inserts an athlete into existing Store.
 func (s *Store) SaveAthlete(ctx context.Context, athlete prorodeoapp.Athlete) error {
 	_, err := s.db.ExecContext(ctx, `
-						INSERT OR REPLACE INTO contestants
-										(id, first_name, last_name, nick_name, hometown, photo_url,
-										 birth_date, age, total_earnings, year_earnings, world_titles,
-										 nfr_qualifications, date_joined, event_types, biography_text, is_active,
-										 scraped_at)
-						VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+		INSERT INTO contestants
+			(id, first_name, last_name, nick_name, hometown, photo_url,
+			 birth_date, age, total_earnings, year_earnings, world_titles,
+			 nfr_qualifications, date_joined, event_types, biography_text, is_active,
+			 scraped_at)
+		VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+		ON CONFLICT(id) DO UPDATE SET
+			first_name = excluded.first_name,
+			last_name = excluded.last_name,
+			nick_name = excluded.nick_name,
+			hometown = excluded.hometown,
+			photo_url = excluded.photo_url,
+			birth_date = excluded.birth_date,
+			age = excluded.age,
+			total_earnings = excluded.total_earnings,
+			year_earnings = excluded.year_earnings,
+			world_titles = excluded.world_titles,
+			nfr_qualifications = excluded.nfr_qualifications,
+			date_joined = excluded.date_joined,
+			event_types = excluded.event_types,
+			biography_text = excluded.biography_text,
+			is_active = excluded.is_active,
+			scraped_at = excluded.scraped_at`,
 		athlete.ContestantID,
 		athlete.FirstName,
 		athlete.LastName,
@@ -113,12 +131,29 @@ func (s *Store) SaveAthleteBatch(ctx context.Context, batch []prorodeoapp.Athlet
 
 	// prepare upsert statement
 	stmt, err := tx.PrepareContext(ctx, `
-                INSERT OR REPLACE INTO contestants
-                        (id, first_name, last_name, nick_name, hometown, photo_url,
-                         birth_date, age, total_earnings, year_earnings, world_titles,
-                         nfr_qualifications, date_joined, event_types, biography_text, is_active,
-                         scraped_at)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
+		INSERT INTO contestants
+			(id, first_name, last_name, nick_name, hometown, photo_url,
+			 birth_date, age, total_earnings, year_earnings, world_titles,
+			 nfr_qualifications, date_joined, event_types, biography_text, is_active,
+			 scraped_at)
+		VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+		ON CONFLICT(id) DO UPDATE SET
+			first_name = excluded.first_name,
+			last_name = excluded.last_name,
+			nick_name = excluded.nick_name,
+			hometown = excluded.hometown,
+			photo_url = excluded.photo_url,
+			birth_date = excluded.birth_date,
+			age = excluded.age,
+			total_earnings = excluded.total_earnings,
+			year_earnings = excluded.year_earnings,
+			world_titles = excluded.world_titles,
+			nfr_qualifications = excluded.nfr_qualifications,
+			date_joined = excluded.date_joined,
+			event_types = excluded.event_types,
+			biography_text = excluded.biography_text,
+			is_active = excluded.is_active,
+			scraped_at = excluded.scraped_at`)
 	if err != nil {
 		return fmt.Errorf("prepare statement: %w", err)
 	}
