@@ -4,29 +4,29 @@ package rodeoapp
 
 import (
 	"context"
-	"fmt"
+	// "fmt"
 	"sync"
-	"time"
+	//"time"
 
 	"github.com/am29/ferdinand/app/domain/prorodeoapp"
-	"github.com/jto05/chute/business/data/store/rodeodb"
+	"github.com/jto05/chute/business/domain/rodeobus/stores/sqlitedb"
 	"github.com/jto05/chute/foundation/logger"
 )
 
 // App holds the dependencies for rodeo sync operations.
 type App struct {
 	log   *logger.Logger
-	store *rodeodb.Store
+	store *sqlitedb.Store
 }
 
 // New constructs an App.
-func New(log *logger.Logger, store *rodeodb.Store) *App {
+func New(log *logger.Logger, store *sqlitedb.Store) *App {
 	return &App{log: log, store: store}
 }
 
 // SyncAthletes fetches all contestants and stores result into storage.
 func (a *App) SyncAthletes(ctx context.Context) error {
-	a.log.Info("sync athletes started")
+	a.log.Info("syncing athletes started")
 
 	// shared pool of ids
 	ids := make(chan int, 5000) // at size 750 because workers consume as soon as fetched ids collected
@@ -67,19 +67,9 @@ func (a *App) SyncAthletes(ctx context.Context) error {
 		close(ids)
 	}()
 
-	/*
-
-		schema:
-
-		-
-		- blob biograph text (characters)
-
-
-	*/
-
 	// part 2: fetch athlete based on id from shared channel and store
 	var fetchWg sync.WaitGroup
-	numOfConsumers := 30
+	const numOfConsumers = 30
 
 	for range numOfConsumers {
 		fetchWg.Add(1) // post
@@ -88,9 +78,9 @@ func (a *App) SyncAthletes(ctx context.Context) error {
 			defer fetchWg.Done() // wait
 			for id := range ids {
 				// NOTE: should already stored athletes be skipped? should implement way to update exisitng athletes?
-				if a.store.AthleteExists(id) {
-					continue // for now skip existing athletes
-				}
+				// if a.store.AthleteExists(id) {
+				// 	continue // for now skip existing athletes
+				// }
 
 				raw, err := prorodeoapp.FetchAthlete(ctx, id)
 				if err != nil {
@@ -104,18 +94,22 @@ func (a *App) SyncAthletes(ctx context.Context) error {
 					continue
 				}
 
-				if err := a.store.SaveAthlete(athlete); err != nil {
+				if err := a.store.SaveAthlete(ctx, athlete); err != nil {
 					a.log.Error("save athlete", "id", id, "error", err)
 				}
-
 			}
 
-			time.Sleep(50 * time.Millisecond)
+			// // latency for rate limiting
+			// time.Sleep(50 * time.Millisecond)
 		}()
 	}
 
+	fetchWg.Wait()
+	a.log.Info("syncing athletes completed")
 	return nil
 }
+
+/*
 
 // Sync fetches all completed rodeos in the given date range and persists their
 // results to the store. Already-stored rodeos are skipped.
@@ -157,3 +151,5 @@ func (a *App) Sync(ctx context.Context, startDate, endDate string) error {
 	a.log.Info("sync complete", "stored", stored, "skipped", skipped)
 	return nil
 }
+
+*/

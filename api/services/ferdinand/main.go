@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/jto05/chute/app/domain/rodeoapp"
-	"github.com/jto05/chute/business/data/store/rodeodb"
+	"github.com/jto05/chute/business/domain/rodeobus/stores/sqlitedb"
 	"github.com/jto05/chute/foundation/logger"
 )
 
@@ -37,12 +37,15 @@ func run(log *logger.Logger) error {
 		EndDate        string
 	}{
 		ScrapeInterval: 6 * time.Hour,
-		DataDir:        "data/results/rodeo",
+		DataDir:        "data/results/chute.db",
 		StartDate:      "1/1/2026",
 		EndDate:        "12/31/2026",
 	}
 
-	store := rodeodb.New(cfg.DataDir)
+	store, err := sqlitedb.New(cfg.DataDir)
+	if err != nil {
+		log.Error("sqlitedb creation", "error", err)
+	}
 	app := rodeoapp.New(log, store)
 
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
