@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/jto05/chute/app/domain/sheetapp"
-	"github.com/jto05/chute/business/domain/rodeobus/stores/sqlitedb"
+	"github.com/jto05/chute/business/store"
 	"github.com/jto05/chute/foundation/logger"
 	"github.com/jto05/chute/foundation/web"
 )
@@ -58,12 +58,12 @@ func run(log *logger.Logger) error {
 		return fmt.Errorf("parse templates: %w", err)
 	}
 
-	store, err := sqlitedb.New(cfg.DataDir)
+	db, err := store.New(cfg.DataDir)
 	if err != nil {
 		return fmt.Errorf("open store: %w", err)
 	}
 
-	app := sheetapp.New(log, store, tmpl)
+	app := sheetapp.New(log, db, tmpl)
 
 	mux := web.NewMux(log)
 	app.Routes(mux)

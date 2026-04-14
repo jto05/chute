@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jto05/chute/business/domain/rodeobus/stores/sqlitedb"
+	"github.com/jto05/chute/business/store"
 	"github.com/jto05/chute/foundation/logger"
 	"github.com/jto05/chute/foundation/pdf"
 	"github.com/jto05/chute/foundation/web"
@@ -19,12 +19,12 @@ import (
 // App holds the dependencies for sheet PDF generation.
 type App struct {
 	log   *logger.Logger
-	store *sqlitedb.Store
+	store *store.Store
 	tmpl  *template.Template
 }
 
 // New constructs an App. tmpl is the parsed HTML template set.
-func New(log *logger.Logger, store *sqlitedb.Store, tmpl *template.Template) *App {
+func New(log *logger.Logger, store *store.Store, tmpl *template.Template) *App {
 	return &App{log: log, store: store, tmpl: tmpl}
 }
 
@@ -106,7 +106,7 @@ func (a *App) generatePDF(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	athletes := make([]sqlitedb.AthleteResult, 0, len(req.Contestants))
+	athletes := make([]store.AthleteResult, 0, len(req.Contestants))
 	notes := make(map[int]string, len(req.Contestants))
 	for _, entry := range req.Contestants {
 		id, err := strconv.Atoi(entry.ID)
@@ -160,7 +160,7 @@ type ContestantDetailView struct {
 	BiographyHTML     template.HTML
 }
 
-func buildDetailView(d sqlitedb.AthleteDetail) ContestantDetailView {
+func buildDetailView(d store.AthleteDetail) ContestantDetailView {
 	v := ContestantDetailView{
 		ID:                d.ContestantID,
 		FullName:          d.FirstName + " " + d.LastName,

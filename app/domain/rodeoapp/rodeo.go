@@ -9,18 +9,18 @@ import (
 	//"time"
 
 	"github.com/am29/ferdinand/app/domain/prorodeoapp"
-	"github.com/jto05/chute/business/domain/rodeobus/stores/sqlitedb"
+	"github.com/jto05/chute/business/store"
 	"github.com/jto05/chute/foundation/logger"
 )
 
 // App holds the dependencies for rodeo sync operations.
 type App struct {
 	log   *logger.Logger
-	store *sqlitedb.Store
+	store *store.Store
 }
 
 // New constructs an App.
-func New(log *logger.Logger, store *sqlitedb.Store) *App {
+func New(log *logger.Logger, store *store.Store) *App {
 	return &App{log: log, store: store}
 }
 

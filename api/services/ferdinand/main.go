@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/jto05/chute/app/domain/rodeoapp"
-	"github.com/jto05/chute/business/domain/rodeobus/stores/sqlitedb"
+	"github.com/jto05/chute/business/store"
 	"github.com/jto05/chute/foundation/logger"
 )
 
@@ -42,11 +42,11 @@ func run(log *logger.Logger) error {
 		EndDate:        "12/31/2026",
 	}
 
-	store, err := sqlitedb.New(cfg.DataDir)
+	db, err := store.New(cfg.DataDir)
 	if err != nil {
-		log.Error("sqlitedb creation", "error", err)
+		log.Error("store creation", "error", err)
 	}
-	app := rodeoapp.New(log, store)
+	app := rodeoapp.New(log, db)
 
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()

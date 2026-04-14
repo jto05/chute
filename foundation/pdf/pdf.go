@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/go-pdf/fpdf"
-	"github.com/jto05/chute/business/domain/rodeobus/stores/sqlitedb"
+	"github.com/jto05/chute/business/store"
 )
 
 const (
@@ -18,7 +18,7 @@ const (
 
 // RenderRoster produces a PDF cheat sheet for the given roster.
 // notes maps ContestantID → freeform text to print at the bottom of each card.
-func RenderRoster(rodeoName, rodeoDate string, athletes []sqlitedb.AthleteResult, notes map[int]string) ([]byte, error) {
+func RenderRoster(rodeoName, rodeoDate string, athletes []store.AthleteResult, notes map[int]string) ([]byte, error) {
 	f := fpdf.New("P", "mm", "A4", "")
 	f.SetMargins(margin, margin, margin)
 	f.SetAutoPageBreak(true, margin)
@@ -66,7 +66,7 @@ func RenderRoster(rodeoName, rodeoDate string, athletes []sqlitedb.AthleteResult
 }
 
 // renderContestantCard draws a single contestant block.
-func renderContestantCard(f *fpdf.Fpdf, a sqlitedb.AthleteResult, notes string) {
+func renderContestantCard(f *fpdf.Fpdf, a store.AthleteResult, notes string) {
 	f.SetFillColor(250, 250, 250)
 	f.SetDrawColor(220, 220, 220)
 	f.SetTextColor(20, 20, 20)
@@ -115,8 +115,8 @@ func formatMoney(v float64) string {
 }
 
 // groupByEvent partitions athletes by their first listed event type.
-func groupByEvent(athletes []sqlitedb.AthleteResult) map[string][]sqlitedb.AthleteResult {
-	m := make(map[string][]sqlitedb.AthleteResult)
+func groupByEvent(athletes []store.AthleteResult) map[string][]store.AthleteResult {
+	m := make(map[string][]store.AthleteResult)
 	for _, a := range athletes {
 		ev := firstEvent(a.EventTypes)
 		m[ev] = append(m[ev], a)
@@ -134,7 +134,7 @@ func firstEvent(eventTypes string) string {
 }
 
 // orderedEvents returns event keys sorted by preferred rodeo order.
-func orderedEvents(m map[string][]sqlitedb.AthleteResult) []string {
+func orderedEvents(m map[string][]store.AthleteResult) []string {
 	preferred := []string{
 		"Bareback Riding", "Steer Wrestling", "Team Roping", "Saddle Bronc Riding",
 		"Tie-Down Roping", "Barrel Racing", "Bull Riding", "Other",
