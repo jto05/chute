@@ -1,14 +1,11 @@
 {{if .}}
   {{range .}}
-  <div class="result-row">
-    <div>
-      <span class="result-name">{{.FirstName}} {{.LastName}}</span>
-      <span class="result-meta"> — {{if .Hometown}}{{.Hometown}}{{else}}–{{end}} &nbsp;|&nbsp; {{.EventTypes}}</span>
-    </div>
-    <button
-      class="btn-add"
-      onclick="addToRoster({{.ContestantID}}, '{{.FirstName}} {{.LastName}}', '{{.EventTypes}}')"
-    >+ Add</button>
+  <div class="result-row"
+       hx-get="/api/contestants/{{.ContestantID}}"
+       hx-target="#contestant-detail"
+       hx-swap="innerHTML">
+    <span class="result-name">{{.FirstName}} {{.LastName}}</span>
+    <span class="result-meta">{{if .Hometown}}{{.Hometown}} &nbsp;&middot;&nbsp; {{end}}{{.EventTypes}}</span>
   </div>
   {{end}}
 {{else}}

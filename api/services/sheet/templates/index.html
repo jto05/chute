@@ -24,120 +24,192 @@
       letter-spacing: .05em;
     }
 
+    /* ── Three-column layout ── */
     .layout {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-      max-width: 1100px;
-      margin: 24px auto;
+      grid-template-columns: 280px 1fr 300px;
+      gap: 16px;
+      max-width: 1300px;
+      margin: 20px auto;
       padding: 0 16px;
+      align-items: start;
     }
 
-    @media (max-width: 700px) {
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr 1fr; }
+      .col-detail { grid-column: span 2; order: -1; }
+    }
+    @media (max-width: 560px) {
       .layout { grid-template-columns: 1fr; }
+      .col-detail { grid-column: span 1; }
     }
 
     .panel {
       background: #fff;
       border: 1px solid #ddd;
       border-radius: 6px;
-      padding: 18px;
+      padding: 16px;
     }
 
     h2 {
-      font-size: .85rem;
+      font-size: .78rem;
       text-transform: uppercase;
-      letter-spacing: .08em;
-      color: #666;
-      margin-bottom: 12px;
+      letter-spacing: .1em;
+      color: #888;
+      margin-bottom: 10px;
     }
 
+    /* ── Search column ── */
     input[type=text] {
       width: 100%;
       padding: 8px 10px;
       border: 1px solid #ccc;
       border-radius: 4px;
-      font-size: .95rem;
+      font-size: .9rem;
     }
     input[type=text]:focus { outline: 2px solid #5a8a5a; border-color: #5a8a5a; }
 
-    #search-results { margin-top: 12px; min-height: 40px; }
+    #search-results { margin-top: 10px; }
 
     .result-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 10px;
+      padding: 8px 6px;
       border-bottom: 1px solid #eee;
-      font-size: .9rem;
+      cursor: pointer;
     }
-    .result-row:hover { background: #f9f9f9; }
+    .result-row:hover { background: #f0f0e8; }
+    .result-row.htmx-request { opacity: .5; }
 
-    .result-name { font-weight: 600; }
-    .result-meta { color: #666; font-size: .8rem; }
+    .result-name { display: block; font-weight: 600; font-size: .88rem; }
+    .result-meta { display: block; color: #888; font-size: .78rem; margin-top: 1px; }
 
-    .btn-add {
+    .hint { color: #aaa; font-size: .82rem; padding: 6px 0; }
+
+    /* ── Detail column ── */
+    .detail-empty {
+      color: #bbb;
+      font-size: .88rem;
+      padding: 20px 0;
+      text-align: center;
+    }
+
+    .contestant-photo {
+      width: 100%;
+      max-height: 200px;
+      object-fit: cover;
+      border-radius: 4px;
+      margin-bottom: 12px;
+    }
+
+    .detail-header { margin-bottom: 10px; }
+    .detail-name { font-size: 1.4rem; font-weight: 700; line-height: 1.2; }
+    .detail-nick { color: #888; font-style: italic; font-size: .9rem; margin-top: 2px; }
+    .detail-hometown { color: #555; font-size: .88rem; margin-top: 4px; }
+
+    .event-tags { display: flex; flex-wrap: wrap; gap: 5px; margin: 10px 0; }
+    .event-tag {
+      background: #e8f0e8;
+      color: #3d6b3d;
+      border-radius: 3px;
+      padding: 2px 8px;
+      font-size: .75rem;
+      font-weight: 600;
+      letter-spacing: .03em;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 12px 0;
+    }
+
+    .stat {
+      background: #f8f8f5;
+      border: 1px solid #e8e8e0;
+      border-radius: 4px;
+      padding: 8px 10px;
+    }
+    .stat-label { display: block; font-size: .7rem; color: #999; text-transform: uppercase; letter-spacing: .05em; }
+    .stat-value { display: block; font-size: 1.05rem; font-weight: 700; margin-top: 2px; }
+
+    .bio-section { margin-top: 14px; }
+    .bio-heading {
+      font-size: .75rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: #aaa;
+      margin-bottom: 6px;
+    }
+    .bio-text {
+      font-size: .88rem;
+      line-height: 1.6;
+      color: #333;
+      white-space: pre-wrap;
+    }
+
+    .btn-add-roster {
+      margin-top: 16px;
+      width: 100%;
+      padding: 10px;
       background: #3d7a3d;
       color: #fff;
       border: none;
       border-radius: 4px;
-      padding: 4px 12px;
+      font-size: .95rem;
+      font-weight: 600;
       cursor: pointer;
-      font-size: .82rem;
-      white-space: nowrap;
     }
-    .btn-add:hover { background: #2e5e2e; }
-    .btn-add:disabled { background: #aaa; cursor: default; }
+    .btn-add-roster:hover { background: #2e5e2e; }
+    .btn-add-roster.added {
+      background: #aaa;
+      cursor: default;
+    }
 
-    .hint { color: #888; font-size: .85rem; padding: 8px 0; }
+    /* ── Roster column ── */
+    .rodeo-fields { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
 
-    /* Roster */
-    #roster-list { list-style: none; margin-bottom: 16px; min-height: 40px; }
+    #roster-list { list-style: none; margin-bottom: 14px; min-height: 30px; }
 
     .roster-item {
-      padding: 10px;
+      padding: 10px 8px;
       border-bottom: 1px solid #eee;
-      font-size: .9rem;
     }
 
     .roster-header {
       display: flex;
       justify-content: space-between;
       align-items: baseline;
-      margin-bottom: 6px;
+      margin-bottom: 5px;
     }
 
-    .roster-name { font-weight: 600; }
-    .roster-events { color: #888; font-size: .8rem; margin-left: 8px; }
+    .roster-name { font-weight: 600; font-size: .88rem; }
+    .roster-events { color: #aaa; font-size: .75rem; margin-left: 6px; }
 
+    .notes-label { font-size: .7rem; color: #bbb; margin-bottom: 3px; display: block; }
     .notes-input {
       width: 100%;
-      padding: 5px 8px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: .82rem;
+      padding: 5px 7px;
+      border: 1px solid #e0e0d8;
+      border-radius: 3px;
+      font-size: .8rem;
       font-family: inherit;
       resize: vertical;
-      min-height: 40px;
-      color: #333;
+      min-height: 38px;
       background: #fafaf5;
+      color: #333;
     }
     .notes-input:focus { outline: 2px solid #8a7a3d; border-color: #8a7a3d; }
-    .notes-label { font-size: .75rem; color: #aaa; margin-bottom: 3px; display: block; }
 
     .btn-remove {
       background: none;
       border: none;
       color: #c0392b;
       cursor: pointer;
-      font-size: 1rem;
+      font-size: .9rem;
       line-height: 1;
-      flex-shrink: 0;
+      padding: 0 2px;
     }
     .btn-remove:hover { color: #922b21; }
-
-    .rodeo-fields { margin-bottom: 16px; display: flex; gap: 10px; }
-    .rodeo-fields input { flex: 1; }
 
     .btn-pdf {
       width: 100%;
@@ -146,27 +218,28 @@
       color: #fff;
       border: none;
       border-radius: 4px;
-      font-size: 1rem;
+      font-size: .95rem;
       font-weight: 600;
       cursor: pointer;
     }
     .btn-pdf:hover { background: #3a3a3a; }
-    .btn-pdf:disabled { background: #aaa; cursor: default; }
+    .btn-pdf:disabled { background: #bbb; cursor: default; }
 
-    .empty-state { color: #aaa; font-size: .85rem; padding: 8px 0; }
+    .empty-state { color: #ccc; font-size: .82rem; padding: 8px 0; }
   </style>
 </head>
 <body>
   <header>CHUTE &mdash; Announcer Sheet Builder</header>
 
   <div class="layout">
-    <!-- Left: search -->
-    <div class="panel">
-      <h2>Search Contestants</h2>
+
+    <!-- Col 1: Search -->
+    <div class="panel col-search">
+      <h2>Search</h2>
       <input
         type="text"
         id="search-input"
-        placeholder="Search by name&hellip;"
+        placeholder="Contestant name&hellip;"
         hx-get="/api/contestants/search"
         hx-trigger="keyup changed delay:300ms"
         hx-target="#search-results"
@@ -174,12 +247,17 @@
         autocomplete="off"
       >
       <div id="search-results">
-        <p class="hint">Type at least 2 characters to search.</p>
+        <p class="hint">Type to search.</p>
       </div>
     </div>
 
-    <!-- Right: roster + generate -->
-    <div class="panel">
+    <!-- Col 2: Contestant detail -->
+    <div class="panel col-detail" id="contestant-detail">
+      <div class="detail-empty"><p>Select a contestant from the search results.</p></div>
+    </div>
+
+    <!-- Col 3: Roster -->
+    <div class="panel col-roster">
       <h2>Roster</h2>
 
       <div class="rodeo-fields">
@@ -191,26 +269,52 @@
         <li class="empty-state">No contestants added yet.</li>
       </ul>
 
-      <button class="btn-pdf" id="generate-btn" onclick="generatePDF()">
-        Generate PDF
-      </button>
+      <button class="btn-pdf" id="generate-btn" onclick="generatePDF()">Generate PDF</button>
     </div>
+
   </div>
 
   <script>
     // roster: [{id, name, events, notes}]
     const roster = [];
 
-    function addToRoster(id, name, events) {
+    // Called by the "Add to Roster" button rendered inside the detail partial.
+    function addFromDetail(btn) {
+      const id  = parseInt(btn.dataset.id, 10);
+      const name   = btn.dataset.name;
+      const events = btn.dataset.events;
       if (roster.find(r => r.id === id)) return;
       roster.push({ id, name, events, notes: '' });
       renderRoster();
+      btn.textContent = '✓ Added';
+      btn.classList.add('added');
+      btn.disabled = true;
     }
+
+    // Keep the add button in sync when a new detail is loaded.
+    document.body.addEventListener('htmx:afterSwap', function(e) {
+      if (e.detail.target.id !== 'contestant-detail') return;
+      const btn = e.detail.target.querySelector('.btn-add-roster');
+      if (!btn) return;
+      const id = parseInt(btn.dataset.id, 10);
+      if (roster.find(r => r.id === id)) {
+        btn.textContent = '✓ Added';
+        btn.classList.add('added');
+        btn.disabled = true;
+      }
+    });
 
     function removeFromRoster(id) {
       const idx = roster.findIndex(r => r.id === id);
       if (idx !== -1) roster.splice(idx, 1);
       renderRoster();
+      // Re-enable the add button in the detail panel if it's showing this person.
+      const btn = document.querySelector('.btn-add-roster');
+      if (btn && parseInt(btn.dataset.id, 10) === id) {
+        btn.textContent = '+ Add to Roster';
+        btn.classList.remove('added');
+        btn.disabled = false;
+      }
     }
 
     function updateNotes(id, value) {
@@ -233,25 +337,20 @@
       roster.forEach(r => {
         const li = document.createElement('li');
         li.className = 'roster-item';
-        li.dataset.id = r.id;
-
         const notesId = `notes-${r.id}`;
         li.innerHTML = `
           <div class="roster-header">
             <div>
-              <span class="roster-name">${escHtml(r.name)}</span>
-              <span class="roster-events">${escHtml(r.events)}</span>
+              <span class="roster-name">${esc(r.name)}</span>
+              <span class="roster-events">${esc(r.events)}</span>
             </div>
-            <button class="btn-remove" title="Remove" onclick="removeFromRoster(${r.id})">&#x2715;</button>
+            <button class="btn-remove" onclick="removeFromRoster(${r.id})">&#x2715;</button>
           </div>
           <label class="notes-label" for="${notesId}">Notes for PDF</label>
-          <textarea
-            id="${notesId}"
-            class="notes-input"
+          <textarea id="${notesId}" class="notes-input"
             placeholder="e.g. 3x NFR qualifier, won here in 2023…"
             oninput="updateNotes(${r.id}, this.value)"
-          >${escHtml(r.notes)}</textarea>
-        `;
+          >${esc(r.notes)}</textarea>`;
         list.appendChild(li);
       });
     }
@@ -264,16 +363,14 @@
       btn.textContent = 'Generating…';
 
       try {
-        // Sync notes from live textareas before sending (oninput covers typing,
-        // but this catches any edge cases like autofill).
         roster.forEach(r => {
           const el = document.getElementById(`notes-${r.id}`);
           if (el) r.notes = el.value;
         });
 
         const body = {
-          rodeoName: document.getElementById('rodeo-name').value.trim(),
-          rodeoDate: document.getElementById('rodeo-date').value.trim(),
+          rodeoName:   document.getElementById('rodeo-name').value.trim(),
+          rodeoDate:   document.getElementById('rodeo-date').value.trim(),
           contestants: roster.map(r => ({ id: String(r.id), notes: r.notes })),
         };
 
@@ -290,19 +387,19 @@
         }
 
         const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href     = url;
         a.download = (body.rodeoName || 'chute-roster') + '.pdf';
         a.click();
         URL.revokeObjectURL(url);
       } finally {
-        btn.disabled = false;
+        btn.disabled    = false;
         btn.textContent = 'Generate PDF';
       }
     }
 
-    function escHtml(s) {
+    function esc(s) {
       return String(s)
         .replace(/&/g,'&amp;').replace(/</g,'&lt;')
         .replace(/>/g,'&gt;').replace(/"/g,'&quot;');

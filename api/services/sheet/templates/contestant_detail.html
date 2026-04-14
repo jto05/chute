@@ -1,0 +1,64 @@
+{{if .FullName}}
+<div class="detail-inner">
+
+  {{if .PhotoURL}}
+  <img class="contestant-photo" src="{{.PhotoURL}}" alt="{{.FullName}}"
+       onerror="this.style.display='none'">
+  {{end}}
+
+  <div class="detail-header">
+    <h1 class="detail-name">{{.FullName}}</h1>
+    {{if .NickName}}<p class="detail-nick">&ldquo;{{.NickName}}&rdquo;</p>{{end}}
+    {{if .Hometown}}<p class="detail-hometown">{{.Hometown}}</p>{{end}}
+  </div>
+
+  {{if .EventTypes}}
+  <div class="event-tags">
+    {{range .EventTypes}}<span class="event-tag">{{.}}</span>{{end}}
+  </div>
+  {{end}}
+
+  <div class="stats-grid">
+    <div class="stat">
+      <span class="stat-label">Age</span>
+      <span class="stat-value">{{.Age}}</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">World Titles</span>
+      <span class="stat-value">{{.WorldTitles}}</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">NFR Qualifications</span>
+      <span class="stat-value">{{.NFRQualifications}}</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">Career Earnings</span>
+      <span class="stat-value">{{.TotalEarnings}}</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">This Year</span>
+      <span class="stat-value">{{.YearEarnings}}</span>
+    </div>
+  </div>
+
+  {{if .BiographyText}}
+  <div class="bio-section">
+    <h3 class="bio-heading">Biography</h3>
+    <p class="bio-text">{{.BiographyText}}</p>
+  </div>
+  {{end}}
+
+  <button
+    class="btn-add-roster"
+    data-id="{{.ID}}"
+    data-name="{{.FullName}}"
+    data-events="{{.EventTypesRaw}}"
+    onclick="addFromDetail(this)"
+  >+ Add to Roster</button>
+
+</div>
+{{else}}
+<div class="detail-empty">
+  <p>Select a contestant from the search results.</p>
+</div>
+{{end}}
