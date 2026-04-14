@@ -69,6 +69,7 @@ func createTables(db *sql.DB) error {
 // ==================================
 // Athletes
 
+// SaveAthlete inserts an athlete into existing Store.
 func (s *Store) SaveAthlete(ctx context.Context, athlete prorodeoapp.Athlete) error {
 	_, err := s.db.ExecContext(ctx, `
 						INSERT OR REPLACE INTO contestants
@@ -99,4 +100,58 @@ func (s *Store) SaveAthlete(ctx context.Context, athlete prorodeoapp.Athlete) er
 		return fmt.Errorf("save athlete %d: %w", athlete.ContestantID, err)
 	}
 	return nil
+}
+
+// SaveAthleteBatch inserts a given slice of Athletes into existing Store.
+func (s *Store) SaveAthleteBatch(ctx context.Context, batch []prorodeoapp.Athlete) error {
+	// create transaction
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("begin transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	// prepare upsert statement
+	stmt, err := tx.PrepareContext(ctx, `
+                INSERT OR REPLACE INTO contestants
+                        (id, first_name, last_name, nick_name, hometown, photo_url,
+                         birth_date, age, total_earnings, year_earnings, world_titles,
+                         nfr_qualifications, date_joined, event_types, biography_text, is_active,
+                         scraped_at)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
+	if err != nil {
+		return fmt.Errorf("prepare statement: %w", err)
+	}
+	defer stmt.Close()
+
+	// calculate time outside of loop so all times are synchronized in batch
+	now := time.Now().UTC().Format(time.RFC3339)
+
+	for _, athlete := range batch {
+		_, err := stmt.ExecContext(ctx,
+			athlete.ContestantID,
+			athlete.FirstName,
+			athlete.LastName,
+			athlete.NickName,
+			athlete.Hometown,
+			athlete.PhotoURL,
+			athlete.BirthDate.UTC().Format(time.RFC3339),
+			athlete.Age,
+			athlete.TotalEarnings,
+			athlete.YearEarnings,
+			athlete.WorldTitles,
+			athlete.NFRQualifications,
+			athlete.DateJoined.UTC().Format(time.RFC3339),
+			strings.Join(athlete.EventTypes, ","),
+			athlete.BiographyText,
+			athlete.IsActive,
+			now,
+		)
+		if err != nil {
+			return fmt.Errorf("insert athlete %d: %w", athlete.ContestantID, err)
+		}
+	}
+
+	// commit transaction to database
+	return tx.Commit()
 }
