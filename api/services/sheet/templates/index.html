@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chute — Announcer Sheet</title>
+  <title>Chute — Sheet Builder</title>
   <script src="https://unpkg.com/htmx.org@1.9.12"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -138,13 +138,32 @@
       text-transform: uppercase;
       letter-spacing: .08em;
       color: #aaa;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
     }
-    .bio-text {
-      font-size: .88rem;
-      line-height: 1.6;
-      color: #333;
-      white-space: pre-wrap;
+
+    /* Biography HTML content */
+    .bio-text { font-size: .86rem; line-height: 1.65; color: #333; }
+    .bio-text p { margin-bottom: .85em; }
+    .bio-text p:last-child { margin-bottom: 0; }
+    .bio-text strong {
+      font-weight: 700;
+      color: #1a1a1a;
+    }
+    .bio-text i, .bio-text em { font-style: italic; color: #555; }
+
+    /* Highlighted year at start of bullet lines, e.g. • 2007: */
+    .bio-year {
+      font-weight: 700;
+      color: #3d6b3d;
+    }
+
+    /* Dollar amounts in prose */
+    .bio-money {
+      font-weight: 600;
+      color: #7a4e00;
+      background: #fff8ee;
+      border-radius: 2px;
+      padding: 0 2px;
     }
 
     .btn-add-roster {
@@ -229,7 +248,7 @@
   </style>
 </head>
 <body>
-  <header>CHUTE &mdash; Announcer Sheet Builder</header>
+  <header>CHUTE &mdash; Sheet Builder</header>
 
   <div class="layout">
 
