@@ -1,0 +1,16 @@
+{{if .}}
+  {{range .}}
+  <div class="result-row">
+    <div>
+      <span class="result-name">{{.FirstName}} {{.LastName}}</span>
+      <span class="result-meta"> — {{if .Hometown}}{{.Hometown}}{{else}}–{{end}} &nbsp;|&nbsp; {{.EventTypes}}</span>
+    </div>
+    <button
+      class="btn-add"
+      onclick="addToRoster({{.ContestantID}}, '{{.FirstName}} {{.LastName}}', '{{.EventTypes}}')"
+    >+ Add</button>
+  </div>
+  {{end}}
+{{else}}
+  <p class="hint">No contestants found.</p>
+{{end}}

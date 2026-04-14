@@ -1,13 +1,14 @@
 package sheetapp
 
-// PDFRequest carries the parameters an sheet supplies when generating a sheet.
-type PDFRequest struct {
-	RodeoID int
-	// Future: round filter, event filter, layout options, etc.
+// ContestantEntry pairs a contestant ID with any session notes the user typed.
+type ContestantEntry struct {
+	ID    string `json:"id"`
+	Notes string `json:"notes"`
 }
 
-// PDFResponse holds the rendered PDF bytes and a suggested filename.
-type PDFResponse struct {
-	Filename string
-	Data     []byte
+// PDFRequest is the JSON body sent by the browser when generating a PDF.
+type PDFRequest struct {
+	RodeoName   string            `json:"rodeoName"`
+	RodeoDate   string            `json:"rodeoDate"`
+	Contestants []ContestantEntry `json:"contestants"`
 }

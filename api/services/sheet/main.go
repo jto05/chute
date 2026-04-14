@@ -1,10 +1,12 @@
-// sheet is an HTTP service that serves rodeo data and generates
-// sheet PDFs on demand.
+// sheet is an HTTP service for searching contestants and generating
+// announcer cheat-sheet PDFs.
 package main
 
 import (
 	"context"
+	"embed"
 	"fmt"
+	"html/template"
 	"net/http"
 	"os"
 	"os/signal"
@@ -12,10 +14,13 @@ import (
 	"time"
 
 	"github.com/jto05/chute/app/domain/sheetapp"
-	"github.com/jto05/chute/business/data/store/rodeodb"
+	"github.com/jto05/chute/business/domain/rodeobus/stores/sqlitedb"
 	"github.com/jto05/chute/foundation/logger"
 	"github.com/jto05/chute/foundation/web"
 )
+
+//go:embed templates/*.html
+var templateFS embed.FS
 
 var build = "develop"
 
@@ -31,7 +36,6 @@ func main() {
 func run(log *logger.Logger) error {
 	log.Info("startup", "version", build)
 
-	// TODO: load from env / config file.
 	cfg := struct {
 		Host            string
 		ReadTimeout     time.Duration
@@ -45,11 +49,21 @@ func run(log *logger.Logger) error {
 		WriteTimeout:    10 * time.Second,
 		IdleTimeout:     120 * time.Second,
 		ShutdownTimeout: 15 * time.Second,
-		DataDir:         "data/results",
+		DataDir:         "data/chute.db",
 	}
 
-	store := rodeodb.New(cfg.DataDir)
-	app := sheetapp.New(log, store)
+	// Parse HTML templates embedded in the binary.
+	tmpl, err := template.ParseFS(templateFS, "templates/*.html")
+	if err != nil {
+		return fmt.Errorf("parse templates: %w", err)
+	}
+
+	store, err := sqlitedb.New(cfg.DataDir)
+	if err != nil {
+		return fmt.Errorf("open store: %w", err)
+	}
+
+	app := sheetapp.New(log, store, tmpl)
 
 	mux := web.NewMux(log)
 	app.Routes(mux)
@@ -67,7 +81,7 @@ func run(log *logger.Logger) error {
 
 	serverErrors := make(chan error, 1)
 	go func() {
-		log.Info("startup", "host", cfg.Host)
+		log.Info("sheet running", "host", cfg.Host)
 		serverErrors <- srv.ListenAndServe()
 	}()
 
