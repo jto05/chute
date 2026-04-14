@@ -41,10 +41,10 @@
     </div>
   </div>
 
-  {{if .BiographyText}}
+  {{if .BiographyHTML}}
   <div class="bio-section">
     <h3 class="bio-heading">Biography</h3>
-    <p class="bio-text">{{.BiographyText}}</p>
+    <div class="bio-text">{{.BiographyHTML}}</div>
   </div>
   {{end}}
 

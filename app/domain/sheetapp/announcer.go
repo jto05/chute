@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -156,7 +157,7 @@ type ContestantDetailView struct {
 	NFRQualifications string
 	EventTypes        []string
 	EventTypesRaw     string // comma-joined, used in JS data attribute
-	BiographyText     string
+	BiographyHTML     template.HTML
 }
 
 func buildDetailView(d sqlitedb.AthleteDetail) ContestantDetailView {
@@ -181,9 +182,35 @@ func buildDetailView(d sqlitedb.AthleteDetail) ContestantDetailView {
 		v.PhotoURL = *d.PhotoURL
 	}
 	if d.BiographyText != nil {
-		v.BiographyText = *d.BiographyText
+		v.BiographyHTML = formatBiography(*d.BiographyText)
 	}
 	return v
+}
+
+var (
+	// Bullet-point year: "• 2007:" → wraps year in a highlight span.
+	reBulletYear = regexp.MustCompile(`(• )(\d{4})(: )`)
+	// Dollar amounts in prose text (e.g. "with $13,322").
+	reMoney = regexp.MustCompile(`\$[\d,]+(?:\.\d+)?`)
+)
+
+// formatBiography returns the biography as safe HTML with extra highlights:
+//   - bullet-point years get a colored span
+//   - dollar amounts get a money-highlight span
+//
+// The source text already contains HTML tags from the scraper, so we pass
+// it through as template.HTML rather than escaping it.
+func formatBiography(text string) template.HTML {
+	if text == "" {
+		return ""
+	}
+	// Highlight bullet-point years: • 2007: → • <span class="bio-year">2007</span>:
+	text = reBulletYear.ReplaceAllString(text, `$1<span class="bio-year">$2</span>$3`)
+	// Highlight money amounts: $13,322 → <span class="bio-money">$13,322</span>
+	text = reMoney.ReplaceAllStringFunc(text, func(m string) string {
+		return `<span class="bio-money">` + m + `</span>`
+	})
+	return template.HTML(text)
 }
 
 func derefInt(n *int64) string {
