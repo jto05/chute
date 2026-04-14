@@ -36,3 +36,11 @@ docker-ferdinand:
 
 docker-sheet:
 	docker build -f zarf/docker/Dockerfile.sheet -t $(SHEET_IMAGE) .
+
+# ===================================================================================================================
+# Clean
+
+clean:
+	rm -rf ./bin
+	rm -rf ./data/results
+	go clean
