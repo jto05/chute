@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/jto05/chute/business/domain/rodeobus/stores/sqlitedb"
 	"github.com/jto05/chute/foundation/logger"
@@ -30,6 +31,7 @@ func New(log *logger.Logger, store *sqlitedb.Store, tmpl *template.Template) *Ap
 func (a *App) Routes(mux *web.Mux) {
 	mux.HandleFunc("GET /", a.index)
 	mux.HandleFunc("GET /api/contestants/search", a.searchContestants)
+	mux.HandleFunc("GET /api/contestants/{id}", a.contestantDetail)
 	mux.HandleFunc("POST /api/sheet/pdf", a.generatePDF)
 }
 
@@ -67,6 +69,29 @@ func (a *App) searchContestants(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// contestantDetail returns the full-info HTML partial for one contestant.
+func (a *App) contestantDetail(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "invalid id", http.StatusBadRequest)
+		return
+	}
+
+	d, err := a.store.LoadAthleteDetail(r.Context(), id)
+	if err != nil {
+		a.log.Error("load athlete detail", "id", id, "error", err)
+		http.Error(w, "not found", http.StatusNotFound)
+		return
+	}
+
+	view := buildDetailView(d)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	if err := a.tmpl.ExecuteTemplate(w, "contestant_detail.html", view); err != nil {
+		a.log.Error("render contestant detail", "error", err)
+	}
+}
+
 // generatePDF accepts a JSON roster and returns a PDF.
 func (a *App) generatePDF(w http.ResponseWriter, r *http.Request) {
 	var req PDFRequest
@@ -80,7 +105,6 @@ func (a *App) generatePDF(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Load each contestant from the DB and collect notes.
 	athletes := make([]sqlitedb.AthleteResult, 0, len(req.Contestants))
 	notes := make(map[int]string, len(req.Contestants))
 	for _, entry := range req.Contestants {
@@ -114,4 +138,70 @@ func (a *App) generatePDF(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename=%q`, filename))
 	w.WriteHeader(http.StatusOK)
 	w.Write(data)
+}
+
+// ── View model ────────────────────────────────────────────────────────────────
+
+// ContestantDetailView is a template-ready view of AthleteDetail.
+type ContestantDetailView struct {
+	ID                int
+	FullName          string
+	NickName          string
+	Hometown          string
+	PhotoURL          string
+	Age               string
+	TotalEarnings     string
+	YearEarnings      string
+	WorldTitles       string
+	NFRQualifications string
+	EventTypes        []string
+	EventTypesRaw     string // comma-joined, used in JS data attribute
+	BiographyText     string
+}
+
+func buildDetailView(d sqlitedb.AthleteDetail) ContestantDetailView {
+	v := ContestantDetailView{
+		ID:                d.ContestantID,
+		FullName:          d.FirstName + " " + d.LastName,
+		TotalEarnings:     "$" + fmtMoney(d.TotalEarnings),
+		YearEarnings:      "$" + fmtMoney(d.YearEarnings),
+		Age:               derefInt(d.Age),
+		WorldTitles:       derefInt(d.WorldTitles),
+		NFRQualifications: derefInt(d.NFRQualifications),
+		EventTypes:        strings.Split(d.EventTypes, ","),
+		EventTypesRaw:     d.EventTypes,
+	}
+	if d.NickName != nil && *d.NickName != "" {
+		v.NickName = *d.NickName
+	}
+	if d.Hometown != nil {
+		v.Hometown = *d.Hometown
+	}
+	if d.PhotoURL != nil {
+		v.PhotoURL = *d.PhotoURL
+	}
+	if d.BiographyText != nil {
+		v.BiographyText = *d.BiographyText
+	}
+	return v
+}
+
+func derefInt(n *int64) string {
+	if n != nil {
+		return strconv.FormatInt(*n, 10)
+	}
+	return "–"
+}
+
+func fmtMoney(v float64) string {
+	s := fmt.Sprintf("%.0f", v)
+	out := make([]byte, 0, len(s)+4)
+	for i := range s {
+		pos := len(s) - i
+		if i > 0 && pos%3 == 0 {
+			out = append(out, ',')
+		}
+		out = append(out, s[i])
+	}
+	return string(out)
 }
