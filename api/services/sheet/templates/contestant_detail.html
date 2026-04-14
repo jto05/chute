@@ -48,6 +48,17 @@
   </div>
   {{end}}
 
+  <div class="notes-section">
+    <label class="notes-section-label" for="detail-notes">Announcer Notes</label>
+    <p class="notes-hint">Reference the biography above. These notes will appear on the generated PDF.</p>
+    <textarea
+      id="detail-notes"
+      class="detail-notes-input"
+      placeholder="e.g. 3x NFR qualifier, won here in 2023, known for consistency in tough conditions…"
+      rows="5"
+    ></textarea>
+  </div>
+
   <button
     class="btn-add-roster"
     data-id="{{.ID}}"

@@ -77,7 +77,6 @@
       cursor: pointer;
     }
     .result-row:hover { background: #f0f0e8; }
-    .result-row.htmx-request { opacity: .5; }
 
     .result-name { display: block; font-weight: 600; font-size: .88rem; }
     .result-meta { display: block; color: #888; font-size: .78rem; margin-top: 1px; }
@@ -145,19 +144,10 @@
     .bio-text { font-size: .86rem; line-height: 1.65; color: #333; }
     .bio-text p { margin-bottom: .85em; }
     .bio-text p:last-child { margin-bottom: 0; }
-    .bio-text strong {
-      font-weight: 700;
-      color: #1a1a1a;
-    }
+    .bio-text strong { font-weight: 700; color: #1a1a1a; }
     .bio-text i, .bio-text em { font-style: italic; color: #555; }
 
-    /* Highlighted year at start of bullet lines, e.g. • 2007: */
-    .bio-year {
-      font-weight: 700;
-      color: #3d6b3d;
-    }
-
-    /* Dollar amounts in prose */
+    .bio-year { font-weight: 700; color: #3d6b3d; }
     .bio-money {
       font-weight: 600;
       color: #7a4e00;
@@ -166,23 +156,60 @@
       padding: 0 2px;
     }
 
-    .btn-add-roster {
-      margin-top: 16px;
+    /* ── Notes section inside detail panel ── */
+    .notes-section {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 2px solid #e8e8e0;
+    }
+
+    .notes-section-label {
+      display: block;
+      font-size: .95rem;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: 4px;
+    }
+
+    .notes-hint {
+      font-size: .78rem;
+      color: #aaa;
+      margin-bottom: 10px;
+    }
+
+    .detail-notes-input {
       width: 100%;
-      padding: 10px;
+      padding: 10px 12px;
+      border: 1px solid #c8c8be;
+      border-radius: 4px;
+      font-size: .95rem;
+      font-family: inherit;
+      line-height: 1.55;
+      resize: vertical;
+      background: #fafaf5;
+      color: #1a1a1a;
+    }
+    .detail-notes-input:focus {
+      outline: 2px solid #8a7a3d;
+      border-color: #8a7a3d;
+      background: #fffef7;
+    }
+    .detail-notes-input::placeholder { color: #bbb; }
+
+    .btn-add-roster {
+      margin-top: 12px;
+      width: 100%;
+      padding: 11px;
       background: #3d7a3d;
       color: #fff;
       border: none;
       border-radius: 4px;
-      font-size: .95rem;
+      font-size: 1rem;
       font-weight: 600;
       cursor: pointer;
     }
     .btn-add-roster:hover { background: #2e5e2e; }
-    .btn-add-roster.added {
-      background: #aaa;
-      cursor: default;
-    }
+    .btn-add-roster.added { background: #5a8a5a; cursor: default; }
 
     /* ── Roster column ── */
     .rodeo-fields { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
@@ -190,7 +217,7 @@
     #roster-list { list-style: none; margin-bottom: 14px; min-height: 30px; }
 
     .roster-item {
-      padding: 10px 8px;
+      padding: 9px 8px;
       border-bottom: 1px solid #eee;
     }
 
@@ -198,26 +225,23 @@
       display: flex;
       justify-content: space-between;
       align-items: baseline;
-      margin-bottom: 5px;
     }
 
     .roster-name { font-weight: 600; font-size: .88rem; }
     .roster-events { color: #aaa; font-size: .75rem; margin-left: 6px; }
 
-    .notes-label { font-size: .7rem; color: #bbb; margin-bottom: 3px; display: block; }
-    .notes-input {
-      width: 100%;
-      padding: 5px 7px;
-      border: 1px solid #e0e0d8;
-      border-radius: 3px;
-      font-size: .8rem;
-      font-family: inherit;
-      resize: vertical;
-      min-height: 38px;
-      background: #fafaf5;
-      color: #333;
+    .roster-notes-preview {
+      font-size: .78rem;
+      color: #888;
+      font-style: italic;
+      margin-top: 3px;
+      line-height: 1.4;
+      /* clamp to 2 lines */
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
-    .notes-input:focus { outline: 2px solid #8a7a3d; border-color: #8a7a3d; }
 
     .btn-remove {
       background: none;
@@ -227,6 +251,7 @@
       font-size: .9rem;
       line-height: 1;
       padding: 0 2px;
+      flex-shrink: 0;
     }
     .btn-remove:hover { color: #922b21; }
 
@@ -270,7 +295,7 @@
       </div>
     </div>
 
-    <!-- Col 2: Contestant detail -->
+    <!-- Col 2: Contestant detail + notes input -->
     <div class="panel col-detail" id="contestant-detail">
       <div class="detail-empty"><p>Select a contestant from the search results.</p></div>
     </div>
@@ -297,29 +322,43 @@
     // roster: [{id, name, events, notes}]
     const roster = [];
 
-    // Called by the "Add to Roster" button rendered inside the detail partial.
+    // Called by the "Add to Roster" button inside the detail partial.
+    // Reads notes from the textarea that lives alongside it.
     function addFromDetail(btn) {
-      const id  = parseInt(btn.dataset.id, 10);
+      const id     = parseInt(btn.dataset.id, 10);
       const name   = btn.dataset.name;
       const events = btn.dataset.events;
-      if (roster.find(r => r.id === id)) return;
-      roster.push({ id, name, events, notes: '' });
+      const notes  = (document.getElementById('detail-notes') || {}).value || '';
+
+      const existing = roster.find(r => r.id === id);
+      if (existing) {
+        // Already in roster — update notes and reflect on button.
+        existing.notes = notes;
+        renderRoster();
+        btn.textContent = '✓ Notes Updated';
+        setTimeout(() => { btn.textContent = '✓ Added'; }, 1500);
+        return;
+      }
+
+      roster.push({ id, name, events, notes });
       renderRoster();
       btn.textContent = '✓ Added';
       btn.classList.add('added');
-      btn.disabled = true;
     }
 
-    // Keep the add button in sync when a new detail is loaded.
+    // When a detail panel loads, sync the add button and pre-fill notes
+    // if this contestant is already in the roster.
     document.body.addEventListener('htmx:afterSwap', function(e) {
       if (e.detail.target.id !== 'contestant-detail') return;
       const btn = e.detail.target.querySelector('.btn-add-roster');
       if (!btn) return;
       const id = parseInt(btn.dataset.id, 10);
-      if (roster.find(r => r.id === id)) {
+      const entry = roster.find(r => r.id === id);
+      if (entry) {
         btn.textContent = '✓ Added';
         btn.classList.add('added');
-        btn.disabled = true;
+        const ta = document.getElementById('detail-notes');
+        if (ta) ta.value = entry.notes;
       }
     });
 
@@ -327,18 +366,12 @@
       const idx = roster.findIndex(r => r.id === id);
       if (idx !== -1) roster.splice(idx, 1);
       renderRoster();
-      // Re-enable the add button in the detail panel if it's showing this person.
+      // Re-enable add button if the detail panel is showing this person.
       const btn = document.querySelector('.btn-add-roster');
       if (btn && parseInt(btn.dataset.id, 10) === id) {
         btn.textContent = '+ Add to Roster';
         btn.classList.remove('added');
-        btn.disabled = false;
       }
-    }
-
-    function updateNotes(id, value) {
-      const entry = roster.find(r => r.id === id);
-      if (entry) entry.notes = value;
     }
 
     function renderRoster() {
@@ -356,7 +389,9 @@
       roster.forEach(r => {
         const li = document.createElement('li');
         li.className = 'roster-item';
-        const notesId = `notes-${r.id}`;
+        const notesHtml = r.notes
+          ? `<p class="roster-notes-preview">${esc(r.notes)}</p>`
+          : '';
         li.innerHTML = `
           <div class="roster-header">
             <div>
@@ -365,11 +400,7 @@
             </div>
             <button class="btn-remove" onclick="removeFromRoster(${r.id})">&#x2715;</button>
           </div>
-          <label class="notes-label" for="${notesId}">Notes for PDF</label>
-          <textarea id="${notesId}" class="notes-input"
-            placeholder="e.g. 3x NFR qualifier, won here in 2023…"
-            oninput="updateNotes(${r.id}, this.value)"
-          >${esc(r.notes)}</textarea>`;
+          ${notesHtml}`;
         list.appendChild(li);
       });
     }
@@ -382,11 +413,6 @@
       btn.textContent = 'Generating…';
 
       try {
-        roster.forEach(r => {
-          const el = document.getElementById(`notes-${r.id}`);
-          if (el) r.notes = el.value;
-        });
-
         const body = {
           rodeoName:   document.getElementById('rodeo-name').value.trim(),
           rodeoDate:   document.getElementById('rodeo-date').value.trim(),
