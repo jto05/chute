@@ -37,11 +37,19 @@
 
     @media (max-width: 900px) {
       .layout { grid-template-columns: 1fr 1fr; }
-      .col-detail { grid-column: span 2; order: -1; }
+      .col-right { grid-column: span 1; }
+      .col-detail { grid-column: span 2; }
     }
     @media (max-width: 560px) {
       .layout { grid-template-columns: 1fr; }
-      .col-detail { grid-column: span 1; }
+      .col-right, .col-detail { grid-column: span 1; }
+    }
+
+    /* Right column stacks roster + notes panels vertically */
+    .col-right {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
     }
 
     .panel {
@@ -83,7 +91,15 @@
 
     .hint { color: #aaa; font-size: .82rem; padding: 6px 0; }
 
-    /* ── Detail column ── */
+    /* ── Detail column — scrolls internally ── */
+    #contestant-detail {
+      max-height: calc(100vh - 80px);
+      overflow-y: auto;
+      /* smooth scrollbar on webkit */
+      scrollbar-width: thin;
+      scrollbar-color: #ccc transparent;
+    }
+
     .detail-empty {
       color: #bbb;
       font-size: .88rem;
@@ -140,13 +156,11 @@
       margin-bottom: 8px;
     }
 
-    /* Biography HTML content */
     .bio-text { font-size: .86rem; line-height: 1.65; color: #333; }
     .bio-text p { margin-bottom: .85em; }
     .bio-text p:last-child { margin-bottom: 0; }
     .bio-text strong { font-weight: 700; color: #1a1a1a; }
     .bio-text i, .bio-text em { font-style: italic; color: #555; }
-
     .bio-year { font-weight: 700; color: #3d6b3d; }
     .bio-money {
       font-weight: 600;
@@ -156,70 +170,12 @@
       padding: 0 2px;
     }
 
-    /* ── Notes section inside detail panel ── */
-    .notes-section {
-      margin-top: 20px;
-      padding-top: 16px;
-      border-top: 2px solid #e8e8e0;
-    }
-
-    .notes-section-label {
-      display: block;
-      font-size: .95rem;
-      font-weight: 700;
-      color: #1a1a1a;
-      margin-bottom: 4px;
-    }
-
-    .notes-hint {
-      font-size: .78rem;
-      color: #aaa;
-      margin-bottom: 10px;
-    }
-
-    .detail-notes-input {
-      width: 100%;
-      padding: 10px 12px;
-      border: 1px solid #c8c8be;
-      border-radius: 4px;
-      font-size: .95rem;
-      font-family: inherit;
-      line-height: 1.55;
-      resize: vertical;
-      background: #fafaf5;
-      color: #1a1a1a;
-    }
-    .detail-notes-input:focus {
-      outline: 2px solid #8a7a3d;
-      border-color: #8a7a3d;
-      background: #fffef7;
-    }
-    .detail-notes-input::placeholder { color: #bbb; }
-
-    .btn-add-roster {
-      margin-top: 12px;
-      width: 100%;
-      padding: 11px;
-      background: #3d7a3d;
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-    }
-    .btn-add-roster:hover { background: #2e5e2e; }
-    .btn-add-roster.added { background: #5a8a5a; cursor: default; }
-
-    /* ── Roster column ── */
+    /* ── Roster panel ── */
     .rodeo-fields { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
 
     #roster-list { list-style: none; margin-bottom: 14px; min-height: 30px; }
 
-    .roster-item {
-      padding: 9px 8px;
-      border-bottom: 1px solid #eee;
-    }
+    .roster-item { padding: 9px 8px; border-bottom: 1px solid #eee; }
 
     .roster-header {
       display: flex;
@@ -236,7 +192,6 @@
       font-style: italic;
       margin-top: 3px;
       line-height: 1.4;
-      /* clamp to 2 lines */
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
@@ -270,6 +225,63 @@
     .btn-pdf:disabled { background: #bbb; cursor: default; }
 
     .empty-state { color: #ccc; font-size: .82rem; padding: 8px 0; }
+
+    /* ── Notes panel (below roster) ── */
+    .notes-empty-state {
+      color: #bbb;
+      font-size: .85rem;
+      text-align: center;
+      padding: 10px 0;
+    }
+
+    .notes-for-label {
+      font-size: .7rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: #aaa;
+      margin-bottom: 2px;
+    }
+
+    .notes-for-name {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: #1a1a1a;
+    }
+
+    .detail-notes-input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #c8c8be;
+      border-radius: 4px;
+      font-size: .95rem;
+      font-family: inherit;
+      line-height: 1.55;
+      resize: vertical;
+      background: #fafaf5;
+      color: #1a1a1a;
+      margin-bottom: 10px;
+    }
+    .detail-notes-input:focus {
+      outline: 2px solid #8a7a3d;
+      border-color: #8a7a3d;
+      background: #fffef7;
+    }
+    .detail-notes-input::placeholder { color: #bbb; }
+
+    .btn-add-roster {
+      width: 100%;
+      padding: 10px;
+      background: #3d7a3d;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-size: .95rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-add-roster:hover { background: #2e5e2e; }
+    .btn-add-roster.added { background: #5a8a5a; }
   </style>
 </head>
 <body>
@@ -295,25 +307,48 @@
       </div>
     </div>
 
-    <!-- Col 2: Contestant detail + notes input -->
+    <!-- Col 2: Contestant detail (scrolls internally) -->
     <div class="panel col-detail" id="contestant-detail">
       <div class="detail-empty"><p>Select a contestant from the search results.</p></div>
     </div>
 
-    <!-- Col 3: Roster -->
-    <div class="panel col-roster">
-      <h2>Roster</h2>
+    <!-- Col 3: Roster + Notes stacked -->
+    <div class="col-right">
 
-      <div class="rodeo-fields">
-        <input type="text" id="rodeo-name" placeholder="Rodeo name">
-        <input type="text" id="rodeo-date" placeholder="Date (e.g. April 12, 2026)">
+      <!-- Roster panel -->
+      <div class="panel">
+        <h2>Roster</h2>
+        <div class="rodeo-fields">
+          <input type="text" id="rodeo-name" placeholder="Rodeo name">
+          <input type="text" id="rodeo-date" placeholder="Date (e.g. April 12, 2026)">
+        </div>
+        <ul id="roster-list">
+          <li class="empty-state">No contestants added yet.</li>
+        </ul>
+        <button class="btn-pdf" id="generate-btn" onclick="generatePDF()">Generate PDF</button>
       </div>
 
-      <ul id="roster-list">
-        <li class="empty-state">No contestants added yet.</li>
-      </ul>
+      <!-- Notes panel -->
+      <div class="panel" id="notes-panel">
+        <h2>Announcer Notes</h2>
+        <div id="notes-empty" class="notes-empty-state">
+          <p>Select a contestant to write notes.</p>
+        </div>
+        <div id="notes-active" style="display:none">
+          <p class="notes-for-label">Writing notes for</p>
+          <p class="notes-for-name" id="notes-for-name"></p>
+          <textarea
+            id="detail-notes"
+            class="detail-notes-input"
+            rows="6"
+            placeholder="e.g. 3x NFR qualifier, won here in 2023, known for consistency in tough conditions…"
+          ></textarea>
+          <button class="btn-add-roster" id="btn-add-roster" onclick="addFromNotesPanel()">
+            + Add to Roster
+          </button>
+        </div>
+      </div>
 
-      <button class="btn-pdf" id="generate-btn" onclick="generatePDF()">Generate PDF</button>
     </div>
 
   </div>
@@ -322,56 +357,85 @@
     // roster: [{id, name, events, notes}]
     const roster = [];
 
-    // Called by the "Add to Roster" button inside the detail partial.
-    // Reads notes from the textarea that lives alongside it.
-    function addFromDetail(btn) {
-      const id     = parseInt(btn.dataset.id, 10);
-      const name   = btn.dataset.name;
-      const events = btn.dataset.events;
-      const notes  = (document.getElementById('detail-notes') || {}).value || '';
+    // The contestant currently shown in the detail panel.
+    let current = null; // {id, name, events}
 
-      const existing = roster.find(r => r.id === id);
-      if (existing) {
-        // Already in roster — update notes and reflect on button.
-        existing.notes = notes;
-        renderRoster();
-        btn.textContent = '✓ Notes Updated';
-        setTimeout(() => { btn.textContent = '✓ Added'; }, 1500);
+    // When HTMX loads a new detail panel, read contestant data from the
+    // wrapper div's data attributes and refresh the notes panel.
+    document.body.addEventListener('htmx:afterSwap', function(e) {
+      if (e.detail.target.id !== 'contestant-detail') return;
+      const inner = e.detail.target.querySelector('.detail-inner');
+      if (!inner) {
+        current = null;
+        setNotesPanel(null);
+        return;
+      }
+      current = {
+        id:     parseInt(inner.dataset.id, 10),
+        name:   inner.dataset.name,
+        events: inner.dataset.events,
+      };
+      setNotesPanel(current);
+    });
+
+    // Show/hide the notes panel and sync its state with the roster.
+    function setNotesPanel(c) {
+      const empty  = document.getElementById('notes-empty');
+      const active = document.getElementById('notes-active');
+      if (!c) {
+        empty.style.display  = '';
+        active.style.display = 'none';
         return;
       }
 
-      roster.push({ id, name, events, notes });
-      renderRoster();
-      btn.textContent = '✓ Added';
-      btn.classList.add('added');
+      empty.style.display  = 'none';
+      active.style.display = '';
+      document.getElementById('notes-for-name').textContent = c.name;
+
+      const ta    = document.getElementById('detail-notes');
+      const btn   = document.getElementById('btn-add-roster');
+      const entry = roster.find(r => r.id === c.id);
+
+      ta.value = entry ? entry.notes : '';
+
+      if (entry) {
+        btn.textContent = '✓ Added — click to update notes';
+        btn.classList.add('added');
+      } else {
+        btn.textContent = '+ Add to Roster';
+        btn.classList.remove('added');
+      }
     }
 
-    // When a detail panel loads, sync the add button and pre-fill notes
-    // if this contestant is already in the roster.
-    document.body.addEventListener('htmx:afterSwap', function(e) {
-      if (e.detail.target.id !== 'contestant-detail') return;
-      const btn = e.detail.target.querySelector('.btn-add-roster');
-      if (!btn) return;
-      const id = parseInt(btn.dataset.id, 10);
-      const entry = roster.find(r => r.id === id);
-      if (entry) {
-        btn.textContent = '✓ Added';
-        btn.classList.add('added');
-        const ta = document.getElementById('detail-notes');
-        if (ta) ta.value = entry.notes;
+    // Add current contestant to roster (or update their notes if already there).
+    function addFromNotesPanel() {
+      if (!current) return;
+      const notes = document.getElementById('detail-notes').value;
+      const btn   = document.getElementById('btn-add-roster');
+
+      const existing = roster.find(r => r.id === current.id);
+      if (existing) {
+        existing.notes = notes;
+        renderRoster();
+        btn.textContent = '✓ Notes Updated';
+        setTimeout(() => {
+          btn.textContent = '✓ Added — click to update notes';
+        }, 1500);
+        return;
       }
-    });
+
+      roster.push({ id: current.id, name: current.name, events: current.events, notes });
+      renderRoster();
+      btn.textContent = '✓ Added — click to update notes';
+      btn.classList.add('added');
+    }
 
     function removeFromRoster(id) {
       const idx = roster.findIndex(r => r.id === id);
       if (idx !== -1) roster.splice(idx, 1);
       renderRoster();
-      // Re-enable add button if the detail panel is showing this person.
-      const btn = document.querySelector('.btn-add-roster');
-      if (btn && parseInt(btn.dataset.id, 10) === id) {
-        btn.textContent = '+ Add to Roster';
-        btn.classList.remove('added');
-      }
+      // Refresh notes panel if showing this contestant.
+      if (current && current.id === id) setNotesPanel(current);
     }
 
     function renderRoster() {

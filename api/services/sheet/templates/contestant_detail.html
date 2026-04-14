@@ -1,5 +1,8 @@
 {{if .FullName}}
-<div class="detail-inner">
+<div class="detail-inner"
+     data-id="{{.ID}}"
+     data-name="{{.FullName}}"
+     data-events="{{.EventTypesRaw}}">
 
   {{if .PhotoURL}}
   <img class="contestant-photo" src="{{.PhotoURL}}" alt="{{.FullName}}"
@@ -47,25 +50,6 @@
     <div class="bio-text">{{.BiographyHTML}}</div>
   </div>
   {{end}}
-
-  <div class="notes-section">
-    <label class="notes-section-label" for="detail-notes">Announcer Notes</label>
-    <p class="notes-hint">Reference the biography above. These notes will appear on the generated PDF.</p>
-    <textarea
-      id="detail-notes"
-      class="detail-notes-input"
-      placeholder="e.g. 3x NFR qualifier, won here in 2023, known for consistency in tough conditions…"
-      rows="5"
-    ></textarea>
-  </div>
-
-  <button
-    class="btn-add-roster"
-    data-id="{{.ID}}"
-    data-name="{{.FullName}}"
-    data-events="{{.EventTypesRaw}}"
-    onclick="addFromDetail(this)"
-  >+ Add to Roster</button>
 
 </div>
 {{else}}
