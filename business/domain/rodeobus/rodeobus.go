@@ -10,7 +10,7 @@ import (
 // Storer defines the storage operations required by the application layer.
 // The underlying implementation (SQLite, file tree, etc.) is hidden behind this interface.
 type Storer interface {
-	// Rodeos
+	// Rodeos UNUSED RIGHT NOW
 	RodeoExists(ctx context.Context, rodeoID int) bool
 	SaveRodeo(ctx context.Context, rodeoID int, data []byte) error
 	LoadRodeo(ctx context.Context, rodeoID int) ([]byte, error)
