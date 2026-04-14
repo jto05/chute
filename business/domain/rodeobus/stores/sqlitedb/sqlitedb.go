@@ -246,7 +246,7 @@ func (s *Store) SearchAthletes(ctx context.Context, q string) ([]AthleteResult, 
 	return results, rows.Err()
 }
 
-// LoadAthlete returns the full row for a single contestant by ID.
+// LoadAthlete returns the lightweight view for a single contestant by ID.
 func (s *Store) LoadAthlete(ctx context.Context, id int) (AthleteResult, error) {
 	var r AthleteResult
 	err := s.db.QueryRowContext(ctx, `
@@ -257,4 +257,75 @@ func (s *Store) LoadAthlete(ctx context.Context, id int) (AthleteResult, error) 
 		return AthleteResult{}, fmt.Errorf("load athlete %d: %w", id, err)
 	}
 	return r, nil
+}
+
+// AthleteDetail is the full contestant row, used for the detail panel.
+// Nullable columns are represented as pointers so callers need no sql import.
+type AthleteDetail struct {
+	ContestantID      int
+	FirstName         string
+	LastName          string
+	NickName          *string
+	Hometown          *string
+	PhotoURL          *string
+	Age               *int64
+	TotalEarnings     float64
+	YearEarnings      float64
+	WorldTitles       *int64
+	NFRQualifications *int64
+	EventTypes        string
+	BiographyText     *string
+}
+
+// LoadAthleteDetail returns all display fields for a single contestant.
+func (s *Store) LoadAthleteDetail(ctx context.Context, id int) (AthleteDetail, error) {
+	// Scan nullables into sql.Null* locally, then convert to pointers.
+	var (
+		nickName          sql.NullString
+		hometown          sql.NullString
+		photoURL          sql.NullString
+		age               sql.NullInt64
+		worldTitles       sql.NullInt64
+		nfrQualifications sql.NullInt64
+		biographyText     sql.NullString
+		d                 AthleteDetail
+	)
+	err := s.db.QueryRowContext(ctx, `
+		SELECT id, first_name, last_name, nick_name, hometown, photo_url,
+		       age, total_earnings, year_earnings, world_titles, nfr_qualifications,
+		       event_types, biography_text
+		FROM contestants WHERE id = ?`, id,
+	).Scan(
+		&d.ContestantID, &d.FirstName, &d.LastName,
+		&nickName, &hometown, &photoURL,
+		&age, &d.TotalEarnings, &d.YearEarnings,
+		&worldTitles, &nfrQualifications,
+		&d.EventTypes, &biographyText,
+	)
+	if err != nil {
+		return AthleteDetail{}, fmt.Errorf("load athlete detail %d: %w", id, err)
+	}
+
+	if nickName.Valid {
+		d.NickName = &nickName.String
+	}
+	if hometown.Valid {
+		d.Hometown = &hometown.String
+	}
+	if photoURL.Valid {
+		d.PhotoURL = &photoURL.String
+	}
+	if age.Valid {
+		d.Age = &age.Int64
+	}
+	if worldTitles.Valid {
+		d.WorldTitles = &worldTitles.Int64
+	}
+	if nfrQualifications.Valid {
+		d.NFRQualifications = &nfrQualifications.Int64
+	}
+	if biographyText.Valid {
+		d.BiographyText = &biographyText.String
+	}
+	return d, nil
 }
