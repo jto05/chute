@@ -10,6 +10,19 @@ run-ferdinand:
 run-sheet:
 	go run ./api/services/sheet/...
 
+# Start both services in a split tmux window (left: ferdinand, right: sheet).
+# Kills any existing 'chute' session first so re-running is always clean.
+dev:
+	tmux kill-session -t chute 2>/dev/null || true
+	tmux new-session -d -s chute
+	tmux send-keys -t chute 'go run ./api/services/ferdinand/...' Enter
+	tmux split-window -h -t chute
+	tmux send-keys -t chute 'go run ./api/services/sheet/...' Enter
+	tmux attach-session -t chute
+
+dev-stop:
+	tmux kill-session -t chute 2>/dev/null || true
+
 tidy:
 	go mod tidy
 
