@@ -1,6 +1,8 @@
 FERDINAND_IMAGE  := chute-ferdinand
 SHEET_IMAGE     := chute-sheet
 
+TMUX_DEV_SESSION=chute-dev
+
 # ===================================================================================================================
 # Development
 
@@ -13,15 +15,19 @@ run-sheet:
 # Start both services in a split tmux window (left: ferdinand, right: sheet).
 # Kills any existing 'chute' session first so re-running is always clean.
 dev:
-	tmux kill-session -t chute 2>/dev/null || true
-	tmux new-session -d -s chute
-	tmux send-keys -t chute 'go run ./api/services/ferdinand/...' Enter
-	tmux split-window -h -t chute
-	tmux send-keys -t chute 'go run ./api/services/sheet/...' Enter
-	tmux attach-session -t chute
+	tmux kill-session -t ${TMUX_DEV_SESSION} 2>/dev/null || true
+	tmux new-session -d -s ${TMUX_DEV_SESSION}
+	tmux send-keys -t ${TMUX_DEV_SESSION} 'go run ./api/services/ferdinand/...' Enter
+	tmux split-window -h -t ${TMUX_DEV_SESSION}
+	tmux send-keys -t ${TMUX_DEV_SESSION} 'go run ./api/services/sheet/...' Enter
+	@if [ -n "$$TMUX" ]; then \
+		TMUX= tmux attach-session -t ${TMUX_DEV_SESSION}; \
+	else \
+		tmux attach-session -t ${TMUX_DEV_SESSION}; \
+	fi
 
 dev-stop:
-	tmux kill-session -t chute 2>/dev/null || true
+	tmux kill-session -t ${TMUX_DEV_SESSION} 2>/dev/null || true
 
 tidy:
 	go mod tidy
