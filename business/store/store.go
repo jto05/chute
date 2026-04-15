@@ -268,6 +268,29 @@ type AthleteDetail struct {
 	BiographyText     *string
 }
 
+// ListAthletesSince returns all athletes scraped after the given Unix timestamp.
+func (s *Store) ListAthletesSince(ctx context.Context, since int64) ([]AthleteResult, error) {
+	rows, err := s.db.QueryContext(ctx, `
+		SELECT id, first_name, last_name, hometown, event_types, total_earnings, year_earnings
+		FROM contestants
+		WHERE strftime('%s', scraped_at) > ?
+		ORDER BY last_name, first_name`, since)
+	if err != nil {
+		return nil, fmt.Errorf("list athletes since %d: %w", since, err)
+	}
+	defer rows.Close()
+
+	var results []AthleteResult
+	for rows.Next() {
+		var r AthleteResult
+		if err := rows.Scan(&r.ContestantID, &r.FirstName, &r.LastName, &r.Hometown, &r.EventTypes, &r.TotalEarnings, &r.YearEarnings); err != nil {
+			return nil, fmt.Errorf("scan athlete: %w", err)
+		}
+		results = append(results, r)
+	}
+	return results, rows.Err()
+}
+
 // LoadAthleteDetail returns all display fields for a single contestant.
 func (s *Store) LoadAthleteDetail(ctx context.Context, id int) (AthleteDetail, error) {
 	var (
